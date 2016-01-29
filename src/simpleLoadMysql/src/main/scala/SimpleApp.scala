@@ -10,10 +10,20 @@ object SimpleApp {
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
-    val df = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://bigdata-master:3306/sample").option("driver", "com.mysql.jdbc.Driver").option("dbtable", "achat").option("user", "tester").option("password", "Password@1").load()
+    val df = sqlContext.read.format("jdbc").
+option("url", "jdbc:mysql://bigdata-master:3306/sample").
+option("driver", "com.mysql.jdbc.Driver").
+option("dbtable", "achat").
+option("user", "tester").
+option("password", "Password@1").
+option("partitionColumn", "hp").
+option("lowerBound", "0").
+option("upperBound", "44000000").
+option("numPartitions", "5").
+load()
     df.registerTempTable("achat")
-    val someRows = sqlContext.sql("select hp, count(distinct up) as cnt from achat group by hp order by cnt desc").take(20)
+    val someRows = sqlContext.sql("select hp, count(distinct up) as cnt from achat group by hp order by cnt desc").head()
 
-    println(someRows.mkString(" "))
+    println("--------see here!------->" + someRows.mkString(" "))
   }
 }
