@@ -15,11 +15,11 @@ val sc = new SparkContext(conf)
 val sqlContext = new SQLContext(sc)
 import sqlContext.implicits._
 
-val df = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://bigdata-master:3306/sample").option("driver", "com.mysql.jdbc.Driver").option("dbtable", "active").option("user", "tester").option("password", "Password@1").load()
+val df = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://bigdata-master:3306/sample").option("driver", "com.mysql.jdbc.Driver").option("dbtable", "female_training").option("user", "tester").option("password", "Password@1").load()
 
-df.registerTempTable("active")
-val rowsDF = sqlContext.sql("select * from active")
-val training = rowsDF.map{case Row(id:Long, is_active: Int) => LabeledPoint(is_active, Vectors.dense(id))}
+df.registerTempTable("female_training")
+val rowsDF = sqlContext.sql("select logins, activedays, activehours from female_training where activehours is not null")
+val training = rowsDF.map{case Row(logins: Int, activedays: Int, activehours: Int) => LabeledPoint(1.0, Vectors.dense(logins.asInstanceOf[Int], activedays.asInstanceOf[Int], activehours.asInstanceOf[Int]))}
 
 val lr = new LogisticRegression()
 println("LogisticRegression parameters:\n" + lr.explainParams() + "\n")
@@ -50,9 +50,10 @@ println("Model 2 was fit using parameters: " + model2.parent.extractParamMap)
 
 // Prepare test data.
 val test = sc.parallelize(Seq(
-  LabeledPoint(1.0, Vectors.dense(1234)),
-  LabeledPoint(0.0, Vectors.dense(3455)),
-  LabeledPoint(1.0, Vectors.dense(3888888))))
+  LabeledPoint(1.0, Vectors.dense(44, 28, 43)),
+  LabeledPoint(0.0, Vectors.dense(0, 0, 0)),
+  LabeledPoint(0.0, Vectors.dense(1, 1, 1)),
+  LabeledPoint(1.0, Vectors.dense(128, 46, 119))))
 
 // Make predictions on test data using the Transformer.transform() method.
 // LogisticRegression.transform will only use the 'features' column.
