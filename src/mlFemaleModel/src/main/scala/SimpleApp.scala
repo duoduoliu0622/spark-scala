@@ -17,39 +17,44 @@ object SimpleApp {
     val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
 
+    // db related
+    val dsl = "jdbc:mysql://bigdata-master:3306/ashley"
+    val username = "tester"
+    val pwd = "Password@1"
+
     //cache_sample_female_list
-    val df1 = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://bigdata-master:3306/ashley")
+    val df1 = sqlContext.read.format("jdbc").option("url", dsl)
       .option("driver", "com.mysql.jdbc.Driver")
       .option("dbtable", "cache_sample_female_list")
-      .option("user", "tester")
-      .option("password", "Password@1")
+      .option("user", username)
+      .option("password", pwd)
       .load()
     df1.registerTempTable("list")
 
     //cache_sample_female_chat_max_distinct_contacts_hourly
-    val df2 = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://bigdata-master:3306/ashley")
+    val df2 = sqlContext.read.format("jdbc").option("url", dsl)
       .option("driver", "com.mysql.jdbc.Driver")
       .option("dbtable", "cache_sample_female_chat_max_distinct_contacts_hourly")
-      .option("user", "tester")
-      .option("password", "Password@1")
+      .option("user", username)
+      .option("password", pwd)
       .load()
     df2.registerTempTable("max_contacts")
 
     //cache_sample_female_mail_last_action
-    val df3 = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://bigdata-master:3306/ashley")
+    val df3 = sqlContext.read.format("jdbc").option("url", dsl)
       .option("driver", "com.mysql.jdbc.Driver")
       .option("dbtable", "cache_sample_female_mail_last_action")
-      .option("user", "tester")
-      .option("password", "Password@1")
+      .option("user", username)
+      .option("password", pwd)
       .load()
     df3.registerTempTable("mail_last_action")
 
     //cache_sample_female_photo
-    val df4 = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://bigdata-master:3306/ashley")
+    val df4 = sqlContext.read.format("jdbc").option("url", dsl)
       .option("driver", "com.mysql.jdbc.Driver")
       .option("dbtable", "cache_sample_female_photo")
-      .option("user", "tester")
-      .option("password", "Password@1")
+      .option("user", username)
+      .option("password", pwd)
       .load()
     df4.registerTempTable("photo")
 
@@ -62,10 +67,14 @@ object SimpleApp {
     )
     println("------------------------------------------------------------")
     rowsDF.printSchema()
-    val training = rowsDF.map {
+    val parsedData = rowsDF.map {
       case Row(is_host: Long, max_volume: Long, email_action: Long, public_photo: Long, private_photo: Long, featured_photo: Long, hidden_photo: Long) =>
         LabeledPoint(is_host.asInstanceOf[Double], Vectors.dense(max_volume.asInstanceOf[Int], email_action.asInstanceOf[Int], public_photo.asInstanceOf[Int], private_photo.asInstanceOf[Int], featured_photo.asInstanceOf[Int], hidden_photo.asInstanceOf[Int]))
     }
+
+    val splits = parsedData.randomSplit(Array(0.9, 0.1), seed = 11L)
+    val training = splits(0)
+    val test = splits(1)
 
     val lr = new LogisticRegression()
     println("LogisticRegression parameters:\n" + lr.explainParams() + "\n")
@@ -93,11 +102,6 @@ object SimpleApp {
     // paramMapCombined overrides all parameters set earlier via lr.set* methods.
     val model2 = lr.fit(training.toDF, paramMapCombined)
     println("Model 2 was fit using parameters: " + model2.parent.extractParamMap)
-
-    // Prepare test data.
-    val test = sc.parallelize(Seq(
-      LabeledPoint(1.0, Vectors.dense(0, 0, 0, 0, 0, 0)),
-      LabeledPoint(1.0, Vectors.dense(0, 0, 0, 1, 0, 0))))
 
     // Make predictions on test data using the Transformer.transform() method.
     // LogisticRegression.transform will only use the 'features' column.
