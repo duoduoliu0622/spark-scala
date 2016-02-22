@@ -19,8 +19,8 @@ object SimpleApp {
 
     // db related
     val dsl = "jdbc:mysql://bigdata-master:3306/ashley"
-    val username = "tester"
-    val pwd = "Password@1"
+    val username = System.getenv("MYSQL_USERNAME")
+    val pwd = System.getenv("MYSQL_PASSWORD")
 
     //cache_sample_female_list
     val df1 = sqlContext.read.format("jdbc").option("url", dsl)

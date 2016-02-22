@@ -14,8 +14,8 @@ object SimpleApp {
 option("url", "jdbc:mysql://bigdata-master:3306/sample").
 option("driver", "com.mysql.jdbc.Driver").
 option("dbtable", "achat").
-option("user", "tester").
-option("password", "Password@1").
+option("user", System.getenv("MYSQL_USERNAME")).
+option("password", System.getenv("MYSQL_PASSWORD")).
 option("partitionColumn", "hp").
 option("lowerBound", "0").
 option("upperBound", "44000000").

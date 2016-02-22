@@ -7,8 +7,8 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 object SimpleApp {
   val url = "jdbc:mysql://bigdata-master:3306/ashley"
   val driver = "com.mysql.jdbc.Driver"
-  val user = "tester"
-  val pwd = "Password@1"
+  val user = System.getenv("MYSQL_USERNAME")
+  val pwd = System.getenv("MYSQL_PASSWORD")
 
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("Simple Application")

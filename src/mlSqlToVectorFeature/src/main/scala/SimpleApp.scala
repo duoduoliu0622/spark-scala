@@ -15,7 +15,7 @@ val sc = new SparkContext(conf)
 val sqlContext = new SQLContext(sc)
 import sqlContext.implicits._
 
-val df = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://bigdata-master:3306/sample").option("driver", "com.mysql.jdbc.Driver").option("dbtable", "female_training").option("user", "tester").option("password", "Password@1").load()
+val df = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://bigdata-master:3306/sample").option("driver", "com.mysql.jdbc.Driver").option("dbtable", "female_training").option("user", System.getenv("MYSQL_USERNAME")).option("password", System.getenv("MYSQL_PASSWORD")).load()
 
 df.registerTempTable("female_training")
 val rowsDF = sqlContext.sql("select logins, activedays, activehours from female_training where activehours is not null")
