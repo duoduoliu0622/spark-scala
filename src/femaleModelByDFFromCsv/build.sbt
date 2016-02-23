@@ -1,4 +1,4 @@
-name := "female model by mllib RDD from csv"
+name := "female model by ml DF from csv"
 
 version := "1.0"
 
