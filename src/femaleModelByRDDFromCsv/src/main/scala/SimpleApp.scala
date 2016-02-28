@@ -55,29 +55,25 @@ object SimpleApp {
     }.cache()
 
 
-    val numClusters = 2
-    val numIterations = 20
-    val clusters = KMeans.train(parsedData, numClusters, numIterations)
+    val list = List(2,3,4,5)
 
-    println("----------------------" + numClusters + "--------------------------")
+    list.foreach(n => {
+      val numClusters = n
+      val numIterations = 20
+      val clusters = KMeans.train(parsedData, numClusters, numIterations)
 
-    val resultRDD = clusters.predict(parsedData)
-    val resultDF = resultRDD.map(r => WhichCluster(r)).toDF()
+      println("----------------------" + numClusters + "--------------------------")
 
-    val countDF = resultDF.groupBy("cluster_id").count()
+      val resultRDD = clusters.predict(parsedData)
+      val resultDF = resultRDD.map(r => WhichCluster(r)).toDF()
 
-    println(" PMML Model :\n" + clusters.toPMML)
-    countDF.show
+      val countDF = resultDF.groupBy("cluster_id").count()
 
-    sqlContext.read.format("jdbc").
-      option("url", url).
-      option("driver", driver).
-      option("dbtable", "cluster_in_test").
-      option("user", user).
-      option("password", pwd).
-      load()
+      println(" PMML Model :\n" + clusters.toPMML)
+      countDF.show
 
-    save(countDF, "cluster_in_test")
+      save(countDF, "cluster_in_test" + n)
+    })
   }
 
   def save(dataFrame: DataFrame, table: String): Unit = {
@@ -85,6 +81,23 @@ object SimpleApp {
     props.setProperty("user", user)
     props.setProperty("password", pwd)
     props.setProperty("driver", driver)
-    org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils.saveTable(dataFrame, url, table, props)
+
+    // create and save in table
+    dataFrame.write.jdbc(url, table, props)
   }
 }
+
+
+/*
+if table already exist
+---------------------------------------------------------------------------------------------
+sqlContext.read.format("jdbc").
+        option("url", url).
+        option("driver", driver).
+        option("dbtable", "cluster_in_test").
+        option("user", user).
+        option("password", pwd).
+        load()
+
+org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils.saveTable(dataFrame, url, table, props)
+ */
