@@ -25,78 +25,84 @@ object SimpleApp {
     df.registerTempTable("female_model")
     val goodDF = sqlContext.sql("select " +
       "pnum," +
-      "days_to_last_login," +
+      "days_to_lastlogin," +
+      "weeks_to_lastlogin," +
+      "max_distinct_chat_contacts_hourly," +
+      "hour_to_max_chat_contacts," +
+      "fraud_status," +
+      "email_action," +
       "total_chat_days," +
       "total_chat," +
       "max_chat_per_receiver," +
+      "mean_chat," +
+      //      "sd_chat," +
+      //      "max_chat," +
       "total_msg_days," +
       "total_msg," +
       "max_msg_per_receiver," +
+      "mean_msg," +
+      "sd_msg," +
+      "max_msg," +
       "total_login_days," +
       "total_login," +
-      "total_profile_view_days," +
-      "total_profile_view," +
-      "max_view_per_viewee," +
-      "max_distinct_contacts_hourly," +
-      "day_to_max_contacts," +
-      "case when fraud_status = 'not fraud' then 1 when fraud_status = 'SUSPICIOUS' then 2 when fraud_status = 'CONFIRMED' then 3 when fraud_status = 'NEW' then 4 else 5 end as is_fraud," +
-      "email_action," +
-      "inactive_days," +
-      "mean_chat," +
-      "mean_msg," +
       "mean_login," +
-      "mean_profile_view" +
+      "sd_login," +
+      "max_login" +
       " from female_model")
     df.printSchema()
 
     val parsedData = goodDF.map {
       case Row(
       pnum: Int,
-      days_to_last_login: Int,
+      days_to_lastlogin: Int,
+      weeks_to_lastlogin: Int,
+      max_distinct_chat_contacts_hourly: Int,
+      hour_to_max_chat_contacts: Int,
+      fraud_status: Int,
+      email_action: Int,
       total_chat_days: Int,
       total_chat: Int,
       max_chat_per_receiver: Double,
+      mean_chat: Double,
+      //      sd_chat: Double,
+      //      max_chat: Double,
       total_msg_days: Int,
       total_msg: Int,
       max_msg_per_receiver: Double,
+      mean_msg: Double,
+      sd_msg: Double,
+      max_msg: Int,
       total_login_days: Int,
       total_login: Int,
-      total_profile_view_days: Int,
-      total_profile_view: Int,
-      max_view_per_viewee: Double,
-      max_distinct_contacts_hourly: Int,
-      day_to_max_contacts: Int,
-      is_fraud: Int,
-      email_action: Int,
-      inactive_days: Int,
-      mean_chat: Double,
-      mean_msg: Double,
       mean_login: Double,
-      mean_profile_view: Double
+      sd_login: Double,
+      max_login: Int
       )
       => (PnumFeature
       (pnum, Vectors.dense(
-        days_to_last_login,
+        days_to_lastlogin,
+        weeks_to_lastlogin,
+        max_distinct_chat_contacts_hourly,
+        hour_to_max_chat_contacts,
+        fraud_status,
+        email_action,
         total_chat_days,
         total_chat,
         max_chat_per_receiver,
+        mean_chat,
+        //        sd_chat,
+        //        max_chat,
         total_msg_days,
         total_msg,
         max_msg_per_receiver,
+        mean_msg,
+        sd_msg,
+        max_msg,
         total_login_days,
         total_login,
-        total_profile_view_days,
-        total_profile_view,
-        max_view_per_viewee,
-        max_distinct_contacts_hourly,
-        day_to_max_contacts,
-        is_fraud,
-        email_action,
-        inactive_days,
-        mean_chat,
-        mean_msg,
         mean_login,
-        mean_profile_view
+        sd_login,
+        max_login
       ))
         )
     }.cache()
