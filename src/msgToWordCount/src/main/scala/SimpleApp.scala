@@ -28,7 +28,7 @@ object SimpleApp {
     msgDF.printSchema()
 
     val cleaner = (msg: String) => {
-      msg.toLowerCase.split(" ").map((w: String) => w.replaceAll("[^a-zA-Z0-9]", ""))
+      msg.toLowerCase.split(" ").map((w: String) => w.replaceAll("[^a-zA-Z0-9]", "")).distinct
     }
     val wordDF = msgDF.explode("message", "word")((r: String) => cleaner(r))
 
