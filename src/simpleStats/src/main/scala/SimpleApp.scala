@@ -19,5 +19,12 @@ object SimpleApp {
     println("mean is: %s".format(summary.mean))
     println("max is: %s".format(summary.max))
     println("min is: %s".format(summary.min))
+
+
+    //find correlation
+    // student, exam1, exam2, exam3
+    val data = sc.parallelize(Array("111, 60, 65, 73", "222, 98,95,88", "333, 56,67,62"))
+    val vectorRdd = data.map((line: String) => line.split(",").drop(1).map((ele: String) => ele.toDouble)).map(Vectors.dense)
+    val corrMatrix = Statistics.corr(vectorRdd)
   }
 }
