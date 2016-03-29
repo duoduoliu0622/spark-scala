@@ -1,5 +1,7 @@
 /* SimpleApp.scala */
 
+import java.io.File
+
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{DataFrame, SQLContext, Row}
@@ -10,18 +12,24 @@ import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.{RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+import org.ini4j.Ini
 
 object SimpleApp {
   val url = "jdbc:mysql://bigdata-master:3306/before_p"
   val driver = "com.mysql.jdbc.Driver"
-  val user = System.getenv("MYSQL_USERNAME")
-  val pwd = System.getenv("MYSQL_PASSWORD")
+
+  var user: String = ""
+  var pwd: String = ""
 
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("Simple Application")
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
+
+    val creds = new Ini(new File("/opt/bigdata/credentials.ini"))
+    user = creds.get("local-db", "username")
+    pwd = creds.get("local-db", "password")
 
     val df = sqlContext.read.format("jdbc").
       option("url", url).
