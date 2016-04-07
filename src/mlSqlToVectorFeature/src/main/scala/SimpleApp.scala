@@ -70,3 +70,11 @@ sc.stop()
 
   }
 }
+
+/*
+val assembler = new VectorAssembler().setInputCols(Array("bareNuclei",
+  "blandChromatin", "clumpThickness", "marginalAdhesion", "mitoses",
+  "normalNucleoli", "singleEpithelialCellSize", "uniformityOfCellShape",
+  "uniformityOfCellSize")).setOutputCol("features")
+val df_new = assembler.transform(df)
+ */
