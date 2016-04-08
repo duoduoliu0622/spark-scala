@@ -40,8 +40,8 @@ object SimpleApp {
     val df = loadTable("one_day")
 
     val data = df.map{
-      case Row(pnum: Int, age: Int, ethnic: Int, vids: Int, ips: Int, emails:Int,  caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
-        LabeledPoint(is_fraud.toDouble, Vectors.dense(age.toDouble, ethnic.toDouble, vids.toDouble, ips.toDouble, emails.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
+      case Row(pnum: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
+        LabeledPoint(is_fraud.toDouble, Vectors.dense(age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
     }.toDF()
 
     val labelIndexer = new StringIndexer()
@@ -55,7 +55,9 @@ object SimpleApp {
       .setMaxCategories(32)
       .fit(data)
 
-    val Array(trainingData, testData) = data.randomSplit(Array(0.8, 0.2))
+    // -- start training data
+    // val Array(trainingData, testData) = data.randomSplit(Array(0.5, 0.5))
+    val trainingData = data
 
     val rf = new RandomForestClassifier()
       .setLabelCol("indexedLabel")
@@ -69,6 +71,14 @@ object SimpleApp {
 
     val pipeline = new Pipeline().setStages(Array(labelIndexer, featureIndexer, rf, labelConverter))
     val model = pipeline.fit(trainingData)
+
+    // -- predict testing data
+    val dfNew = loadTable("one_day_copy")
+    val testData = dfNew.map{
+      case Row(pnum: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
+        LabeledPoint(is_fraud.toDouble, Vectors.dense(age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
+    }.toDF()
+
     val predictions = model.transform(testData)
     predictions.select("predictedLabel", "label", "features").show(5)
 
@@ -85,16 +95,5 @@ object SimpleApp {
 
     val rfModel = model.stages(2).asInstanceOf[RandomForestClassificationModel]
     println("-----------Learned classification forest model:\n" + rfModel.toDebugString)
-
-    // start predicting new users
-    val dfNew = loadTable("one_day_copy")
-
-    val dataNew = dfNew.map{
-      case Row(pnum: Int, age: Int, ethnic: Int, vids: Int, ips: Int, emails:Int,  caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
-        LabeledPoint(pnum.toDouble, Vectors.dense(age.toDouble, ethnic.toDouble, vids.toDouble, ips.toDouble, emails.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
-    }.toDF()
-
-    val pred = model.transform(dataNew)
-    pred.select("predictedLabel", "label", "features").show()
   }
 }
