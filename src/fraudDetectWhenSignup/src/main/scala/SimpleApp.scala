@@ -6,7 +6,6 @@ import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
-
 import org.myutils.{DbSaver, Credentials}
 
 object SimpleApp {
@@ -52,7 +51,7 @@ object SimpleApp {
     val featureIndexer = new VectorIndexer()
       .setInputCol("features")
       .setOutputCol("indexedFeatures")
-      .setMaxCategories(32)
+      .setMaxCategories(10)
       .fit(data)
 
     // -- start training data
