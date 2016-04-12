@@ -39,8 +39,8 @@ object SimpleApp {
     val df = loadTable("one_day")
 
     val data = df.map{
-      case Row(pnum: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
-        LabeledPoint(is_fraud.toDouble, Vectors.dense(age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
+      case Row(pnum: Int, country: Int, gender: Int, seeking: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
+        LabeledPoint(is_fraud.toDouble, Vectors.dense(country.toDouble, gender.toDouble, seeking.toDouble, age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
     }.toDF()
 
     val labelIndexer = new StringIndexer()
@@ -74,15 +74,16 @@ object SimpleApp {
     // -- predict testing data
     val dfNew = loadTable("one_day_copy")
     val testData = dfNew.map{
-      case Row(pnum: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
-        LabeledPoint(is_fraud.toDouble, Vectors.dense(age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
+      case Row(pnum: Int, country: Int, gender: Int, seeking: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
+        LabeledPoint(is_fraud.toDouble, Vectors.dense(country.toDouble, gender.toDouble, seeking.toDouble, age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
     }.toDF()
 
     val predictions = model.transform(testData)
     predictions.select("predictedLabel", "label", "features").show(5)
 
     val dbSaver = new DbSaver(url, user, pwd, driver)
-    dbSaver.createAndSave(predictions.select("predictedLabel", "label"), "result")
+    val resultDF = predictions.select("predictedLabel", "label")
+    dbSaver.createAndSave(resultDF, "result")
 
     // evaluation
     val evaluator = new MulticlassClassificationEvaluator()
