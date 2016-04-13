@@ -39,8 +39,8 @@ object SimpleApp {
     val df = loadTable("one_day")
 
     val data = df.map{
-      case Row(pnum: Int, country: Int, gender: Int, seeking: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
-        LabeledPoint(is_fraud.toDouble, Vectors.dense(country.toDouble, gender.toDouble, seeking.toDouble, age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
+      case Row(pnum: Int, country: Int, gender: Int, seeking: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, is_fraud_domain: Int, is_same: Int, is_fraud: Int) =>
+        LabeledPoint(is_fraud.toDouble, Vectors.dense(country.toDouble, gender.toDouble, seeking.toDouble, age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, is_fraud_domain: Int, is_same.toDouble))
     }.toDF()
 
     val labelIndexer = new StringIndexer()
@@ -74,8 +74,8 @@ object SimpleApp {
     // -- predict testing data
     val dfNew = loadTable("one_day_copy")
     val testData = dfNew.map{
-      case Row(pnum: Int, country: Int, gender: Int, seeking: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, caption_len: Int, bodytype:Int, profile_initially_seeking:Int, is_fraud: Int) =>
-        LabeledPoint(is_fraud.toDouble, Vectors.dense(country.toDouble, gender.toDouble, seeking.toDouble, age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, caption_len.toDouble, bodytype.toDouble, profile_initially_seeking.toDouble))
+      case Row(pnum: Int, country: Int, gender: Int, seeking: Int, age: Int, ethnic: Int, vids: Int, vid_linked_fraud:Int, ips: Int, ip_linked_fraud: Int, emails:Int, email_linked_fraud:Int, is_fraud_domain: Int, is_same: Int, is_fraud: Int) =>
+        LabeledPoint(is_fraud.toDouble, Vectors.dense(country.toDouble, gender.toDouble, seeking.toDouble, age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, is_fraud_domain: Int, is_same.toDouble))
     }.toDF()
 
     val predictions = model.transform(testData)
