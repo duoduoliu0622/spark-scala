@@ -1,12 +1,10 @@
-import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.{RandomForestClassificationModel, RandomForestClassifier}
+import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
-import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
-import org.myutils.{DbSaver, Credentials}
+import org.myutils.{Credentials, DbSaver}
 
 object SimpleApp {
   val url = "jdbc:mysql://bigdata-master:3306/fraud"
@@ -43,33 +41,19 @@ object SimpleApp {
         LabeledPoint(is_fraud.toDouble, Vectors.dense(country.toDouble, gender.toDouble, seeking.toDouble, age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, is_fraud_domain: Int, is_same.toDouble))
     }.toDF()
 
-    val labelIndexer = new StringIndexer()
-      .setInputCol("label")
-      .setOutputCol("indexedLabel")
-      .fit(data)
-
-    val featureIndexer = new VectorIndexer()
-      .setInputCol("features")
-      .setOutputCol("indexedFeatures")
-      .setMaxCategories(10)
-      .fit(data)
+    val layers = Array[Int](13, 10, 9, 8, 2)
 
     // -- start training data
     // val Array(trainingData, testData) = data.randomSplit(Array(0.5, 0.5))
     val trainingData = data
 
-    val rf = new RandomForestClassifier()
-      .setLabelCol("indexedLabel")
-      .setFeaturesCol("indexedFeatures")
-      .setNumTrees(10)
-
-    val labelConverter = new IndexToString()
-      .setInputCol("prediction")
-      .setOutputCol("predictedLabel")
-      .setLabels(labelIndexer.labels)
-
-    val pipeline = new Pipeline().setStages(Array(labelIndexer, featureIndexer, rf, labelConverter))
-    val model = pipeline.fit(trainingData)
+    val trainer = new MultilayerPerceptronClassifier()
+      .setLayers(layers)
+      .setBlockSize(128)
+      .setSeed(1234L)
+      .setMaxIter(100)
+    // train the model
+    val model = trainer.fit(trainingData)
 
     // -- predict testing data
     val dfNew = loadTable("one_day_copy")
@@ -78,22 +62,14 @@ object SimpleApp {
         LabeledPoint(is_fraud.toDouble, Vectors.dense(country.toDouble, gender.toDouble, seeking.toDouble, age.toDouble, ethnic.toDouble, vids.toDouble, vid_linked_fraud.toDouble, ips.toDouble, ip_linked_fraud.toDouble, emails.toDouble, email_linked_fraud.toDouble, is_fraud_domain: Int, is_same.toDouble))
     }.toDF()
 
-    val predictions = model.transform(testData)
-    predictions.select("predictedLabel", "label", "features").show(5)
+    val result = model.transform(testData)
 
     val dbSaver = new DbSaver(url, user, pwd, driver)
-    val resultDF = predictions.select("predictedLabel", "label")
+    val resultDF = result.select("prediction", "label").repartition(20)
     dbSaver.createAndSave(resultDF, "result")
 
-    // evaluation
     val evaluator = new MulticlassClassificationEvaluator()
-      .setLabelCol("indexedLabel")
-      .setPredictionCol("prediction")
       .setMetricName("precision")
-    val accuracy = evaluator.evaluate(predictions)
-    println("-----------Test Error = " + (1.0 - accuracy))
-
-    val rfModel = model.stages(2).asInstanceOf[RandomForestClassificationModel]
-    println("-----------Learned classification forest model:\n" + rfModel.toDebugString)
+    println("Precision:" + evaluator.evaluate(resultDF))
   }
 }

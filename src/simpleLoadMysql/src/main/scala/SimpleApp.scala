@@ -1,7 +1,5 @@
 /* SimpleApp.scala */
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.SparkConf
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SQLContext
 
 object SimpleApp {
@@ -11,9 +9,9 @@ object SimpleApp {
     val sqlContext = new SQLContext(sc)
 
     val df = sqlContext.read.format("jdbc").
-option("url", "jdbc:mysql://bigdata-master:3306/sample").
+option("url", "jdbc:mysql://statsdb02p-am-tor02:3306/aminno").
 option("driver", "com.mysql.jdbc.Driver").
-option("dbtable", "achat").
+option("dbtable", "member").
 option("user", System.getenv("MYSQL_USERNAME")).
 option("password", System.getenv("MYSQL_PASSWORD")).
 option("partitionColumn", "hp").
