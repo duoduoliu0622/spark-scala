@@ -30,7 +30,7 @@ object SimpleApp{
 
     // Create context with 2 second batch interval
     val sparkConf = new SparkConf().setAppName("DirectKafkaWordCount")
-    val ssc = new StreamingContext(sparkConf, Seconds(2))
+    val ssc = new StreamingContext(sparkConf, Seconds(1))
 
     // Create direct kafka stream with brokers and topics
     val topicsSet = topics.split(",").toSet
@@ -51,5 +51,6 @@ object SimpleApp{
 }
 
 /*
+build uber application jar: sbt assembly
 bin/spark-submit --master local[2] --class SimpleApp /tmp/kafka_to_spark_streaming-assembly-1.0.jar localhost:9092 api
  */
