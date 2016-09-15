@@ -4,6 +4,8 @@ import org.apache.spark.streaming._
 import org.apache.spark.streaming.kafka._
 import org.apache.spark.SparkConf
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
   * Consumes messages from one or more topics in Kafka and does wordcount.
   * Usage: DirectKafkaWordCount <brokers> <topics>
@@ -30,7 +32,7 @@ object SimpleApp{
 
     // Create context with 2 second batch interval
     val sparkConf = new SparkConf().setAppName("DirectKafkaWordCount")
-    val ssc = new StreamingContext(sparkConf, Seconds(1))
+    val ssc = new StreamingContext(sparkConf, Seconds(2))
 
     // Create direct kafka stream with brokers and topics
     val topicsSet = topics.split(",").toSet
@@ -38,11 +40,26 @@ object SimpleApp{
     val messages = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](
       ssc, kafkaParams, topicsSet)
 
+    /*
     // Get the lines, split them into words, count the words and print
     val lines = messages.map(_._2)
     val words = lines.flatMap(_.split(" "))
     val wordCounts = words.map(x => (x, 1L)).reduceByKey(_ + _)
     wordCounts.print()
+    */
+
+    // count total events volume after each DStream
+    val arr = new ArrayBuffer[String]()
+
+    val lines = messages.map(_._1)
+    val words = lines.flatMap(_.split("\n"))
+    words.foreachRDD {
+      rdd =>
+        arr ++= rdd.collect()
+        println("-------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+        println(arr.size)
+        // arr.foreach(println)
+    }
 
     // Start the computation
     ssc.start()
@@ -53,4 +70,10 @@ object SimpleApp{
 /*
 build uber application jar: sbt assembly
 bin/spark-submit --master local[2] --class SimpleApp /tmp/kafka_to_spark_streaming-assembly-1.0.jar localhost:9092 api
+
+mysql.server start --log_bin=1 --binlog_format=row --server_id=2
+
+bin/maxwell --user='maxwell' --password='XXXXXX' --host='127.0.0.1' --port=5559 --producer=stdout
+
+bin/maxwell --user='maxwell' --password='XXXXXX' --host='127.0.0.1' --port=5559 --producer=kafka --kafka.bootstrap.servers=localhost:9092  --kafka_topic=aaa # default topic: maxwell
  */
