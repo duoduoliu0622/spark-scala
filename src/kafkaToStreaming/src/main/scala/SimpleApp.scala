@@ -35,7 +35,6 @@ object SimpleApp{
     val sparkConf = new SparkConf()
                       .setAppName("DirectKafkaWordCount")
     val ssc = new StreamingContext(sparkConf, Seconds(2))
-    val sc = new SparkContext(sparkConf)
 
     // Create direct kafka stream with brokers and topics
     val topicsSet = topics.split(",").toSet
