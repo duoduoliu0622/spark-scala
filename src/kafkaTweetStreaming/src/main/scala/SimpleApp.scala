@@ -9,6 +9,8 @@ import org.apache.spark.sql.SQLContext
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.json.JSON
 
+import org.myutils.DbSaver
+
 /**
   * Consumes messages from one or more topics in Kafka and does wordcount.
   * Usage: DirectKafkaWordCount <brokers> <topics>
@@ -22,6 +24,12 @@ import scala.util.parsing.json.JSON
 object SimpleApp{
 
   case class EventObj(username: String, text: String)
+
+  val url = "jdbc:mysql://localhost:3306/main"
+  val driver = "com.mysql.jdbc.Driver"
+
+  var username: String = "root"
+  var password: String = "123456"
 
   def main(args: Array[String]) {
     if (args.length < 2) {
@@ -42,6 +50,8 @@ object SimpleApp{
     val ssc = new StreamingContext(sc, Seconds(2))
     val sqlContext = new SQLContext(sc)
     import sqlContext.implicits._
+
+    val dbSaver = new DbSaver(url, username, password, driver)
 
     // Create direct kafka stream with brokers and topics
     val topicsSet = topics.split(",").toSet
@@ -71,7 +81,8 @@ object SimpleApp{
           }
         }.toDF()
 
-          df.show()
+        df.show()
+        dbSaver.append(df, "tweets")
     }
 
     // Start the computation

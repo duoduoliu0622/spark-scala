@@ -10,7 +10,9 @@ libraryDependencies ++= Seq(
   "org.apache.spark" % "spark-sql_2.11" % "2.0.0" % "provided" ,
   "org.apache.spark" % "spark-streaming_2.11" % "2.0.0" % "provided",
   "org.apache.spark" % "spark-mllib_2.11" % "2.0.0" % "provided",
-  "org.apache.spark" % "spark-streaming-kafka_2.11" % "1.6.2"
+  "org.apache.spark" % "spark-streaming-kafka_2.11" % "1.6.2",
+  "org.ini4j" % "ini4j" % "0.5.4",
+  "mysql" % "mysql-connector-java" % "5.1.38"
 )
 
 assemblySettings
