@@ -21,7 +21,7 @@ import scala.util.parsing.json.JSON
   */
 object SimpleApp{
 
-  case class EventObj(dm_id: String, dm_vid: String, dm_device: String, dm_curr_url: String, dm_action: String, dm_element: String)
+  case class EventObj(username: String, text: String)
 
   def main(args: Array[String]) {
     if (args.length < 2) {
@@ -37,7 +37,7 @@ object SimpleApp{
     val Array(brokers, topics) = args
 
     // Create context with 2 second batch interval
-    val conf = new SparkConf().setAppName("DirectKafkaWordCount")
+    val conf = new SparkConf().setAppName("KafkaTweetStreaming")
     val sc = new SparkContext(conf)
     val ssc = new StreamingContext(sc, Seconds(2))
     val sqlContext = new SQLContext(sc)
@@ -49,13 +49,6 @@ object SimpleApp{
     val messages = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](
       ssc, kafkaParams, topicsSet)
 
-    // Get the lines, split them into words, count the words and print
-    val lines = messages.map(_._2)
-    val words = lines.flatMap(_.split(" "))
-    val wordCounts = words.map(x => (x, 1L)).reduceByKey(_ + _)
-    wordCounts.print()
-
-    /*
     // count total events volume after each DStream
     var total: Long = 0
 
@@ -74,35 +67,12 @@ object SimpleApp{
             var mapObj = jsonObj match {
               case Some(m: Map[String, String]) => m
             }
-            val dm_element = if (mapObj("dm_action") == "view") "NA" else mapObj("dm_element")
-            new EventObj(
-              mapObj("dm_id"), mapObj("dm_vid"), mapObj("dm_device"), mapObj("dm_curr_url"), mapObj("dm_action"), dm_element
-            )
+            new EventObj(mapObj("username"), mapObj("text"))
           }
         }.toDF()
 
           df.show()
-*/
-        /*
-        rdd.collect().foreach(
-          event => {
-            val jsonObj = JSON.parseFull(event)
-            val mapObj = jsonObj match {
-              case Some(m: Map[String, String]) => new Event(
-                m("dm_id"), m("dm_vid"), m("dm_device"), m("dm_curr_url"), m("dm_action"), m("dm_element")
-              )
-            }.toDF("dm_id", "dm_vid", "dm_device", "dm_curr_url", "d_action", "dm_element")
-            println("------------+++++++++++++: " + mapObj("dm_id"))
-            println("------------+++++++++++++: " + mapObj("dm_vid"))
-            println("------------+++++++++++++: " + mapObj("dm_device"))
-            println("------------+++++++++++++: " + mapObj("dm_curr_url"))
-            if (mapObj("dm_action") != "view") {
-              println("------------+++++++++++++: " + mapObj("dm_element"))
-            }
-            println("------------+++++++++++++: " + mapObj("dm_action"))
-          }
-        ) */
-//    }
+    }
 
     // Start the computation
     ssc.start()
@@ -113,10 +83,4 @@ object SimpleApp{
 /*
 build uber application jar: sbt assembly
 bin/spark-submit --master local[2] --class SimpleApp /tmp/kafka_to_spark_streaming-assembly-1.0.jar localhost:9092 api
-
-mysql.server start --log_bin=1 --binlog_format=row --server_id=2
-
-bin/maxwell --user='maxwell' --password='XXXXXX' --host='127.0.0.1' --port=5559 --producer=stdout
-
-bin/maxwell --user='maxwell' --password='XXXXXX' --host='127.0.0.1' --port=5559 --producer=kafka --kafka.bootstrap.servers=localhost:9092  --kafka_topic=aaa # default topic: maxwell
  */
