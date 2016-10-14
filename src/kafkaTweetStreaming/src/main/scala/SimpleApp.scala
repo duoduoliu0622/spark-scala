@@ -66,30 +66,35 @@ object SimpleApp{
 
     val lines = messages.map(_._2)
     val words = lines.flatMap(_.split("\n"))
-    words.foreachRDD {
-      rdd =>
-        total = total + rdd.count()
-        println("-------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-        println("Total events volume: " + total)
-        println("Current events volume: " + rdd.count())
+    try {
+      words.foreachRDD {
+        rdd =>
+          total = total + rdd.count()
+          println("-------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+          println("Total events volume: " + total)
+          println("Current events volume: " + rdd.count())
 
-        val df = rdd.map {
-          event: String => {
-            val jsonObj = JSON.parseFull(event)
-            var mapObj = jsonObj match {
-              case Some(m: Map[String, String]) => m
+          val df = rdd.map {
+            event: String => {
+              val jsonObj = JSON.parseFull(event)
+              var mapObj = jsonObj match {
+                case Some(m: Map[String, String]) => m
+              }
+              new EventObj(mapObj("username"), mapObj("text"))
             }
-            new EventObj(mapObj("username"), mapObj("text"))
-          }
-        }.toDF()
+          }.toDF()
 
-        keywordSet.map{
-          kw =>
-            val dfTmp = df.select("*").where(df("text").contains(kw))
-            dfTmp.registerTempTable("_tmp")
-            val dfResult = sqlContext.sql(s"select username, '${kw}' as keyword, text from _tmp")
-            dbSaver.append(dfResult, "tweets")
-        }
+          keywordSet.map {
+            kw =>
+              val dfTmp = df.select("*").where(df("text").contains(kw))
+              dfTmp.registerTempTable("_tmp")
+              val dfResult = sqlContext.sql(s"select username, '${kw}' as keyword, text from _tmp")
+              dbSaver.append(dfResult, "tweets")
+          }
+
+      }
+    } catch {
+      case e: Exception => println("exception caught: " + e);
     }
 
     // Start the computation
