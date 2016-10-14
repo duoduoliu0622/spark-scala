@@ -25,24 +25,25 @@ object SimpleApp{
 
   case class EventObj(username: String, text: String)
 
-  val url = "jdbc:mysql://localhost:3306/main"
+  val url = "jdbc:mysql://10.5.2.27:3306/main"  // kafka node2
   val driver = "com.mysql.jdbc.Driver"
 
   var username: String = "root"
   var password: String = "123456"
 
   def main(args: Array[String]) {
-    if (args.length < 2) {
+    if (args.length < 3) {
       System.err.println(s"""
                             |Usage: DirectKafkaWordCount <brokers> <topics>
                             |  <brokers> is a list of one or more Kafka brokers
                             |  <topics> is a list of one or more kafka topics to consume from
+                            |  <keywords> is a list of keywords
                             |
         """.stripMargin)
       System.exit(1)
     }
 
-    val Array(brokers, topics) = args
+    val Array(brokers, topics, keywords) = args
 
     // Create context with 2 second batch interval
     val conf = new SparkConf().setAppName("KafkaTweetStreaming")
@@ -55,6 +56,7 @@ object SimpleApp{
 
     // Create direct kafka stream with brokers and topics
     val topicsSet = topics.split(",").toSet
+    val keywordSet = keywords.split(",").toSet
     val kafkaParams = Map[String, String]("metadata.broker.list" -> brokers)
     val messages = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](
       ssc, kafkaParams, topicsSet)
@@ -81,8 +83,13 @@ object SimpleApp{
           }
         }.toDF()
 
-        df.show()
-        dbSaver.append(df, "tweets")
+        keywordSet.map{
+          kw =>
+            val dfTmp = df.select("*").where(df("text").contains(kw))
+            dfTmp.registerTempTable("_tmp")
+            val dfResult = sqlContext.sql(s"select username, '${kw}' as keyword, text from _tmp")
+            dbSaver.append(dfResult, "tweets")
+        }
     }
 
     // Start the computation
