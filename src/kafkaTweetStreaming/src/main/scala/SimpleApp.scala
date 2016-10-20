@@ -4,7 +4,7 @@ import kafka.serializer.StringDecoder
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.kafka._
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{SQLContext,Row}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.json.JSON
@@ -63,6 +63,7 @@ object SimpleApp{
 
     // count total events volume after each DStream
     var total: Long = 0
+    sc.broadcast(total)
 
     val lines = messages.map(_._2)
     val words = lines.flatMap(_.split("\n"))
@@ -80,18 +81,17 @@ object SimpleApp{
               var mapObj = jsonObj match {
                 case Some(m: Map[String, String]) => m
               }
-              new EventObj(mapObj("username"), mapObj("text"))
+              new EventObj(mapObj("username"), mapObj("text").replaceAll("/[^a-zA-Z]/", "").toLowerCase())
             }
           }.toDF()
 
           keywordSet.map {
             kw =>
-              val dfTmp = df.select("*").where(df("text").contains(kw))
+              val dfTmp = df.select("*").where(df("text").contains(" " + kw + " "))
               dfTmp.registerTempTable("_tmp")
               val dfResult = sqlContext.sql(s"select username, '${kw}' as keyword, text from _tmp")
               dbSaver.append(dfResult, "tweets")
           }
-
       }
     } catch {
       case e: Exception => println("exception caught: " + e);
