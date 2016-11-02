@@ -22,22 +22,30 @@ object SimpleApp {
       .option("nullValue", "null")
       .option("treatEmptyValuesAsNulls", "true")
       .load("file:///tmp/s7export-fix.csv")
+    s7export.registerTempTable("s7")
 
-    s7export.printSchema
+    val notlive = sqlContext.read
+      .format("com.databricks.spark.csv")
+      .option("header", "true") // Use first line of all files as header
+      .option("inferSchema", "false") // Automatically infer data types
+      .option("delimiter", "\t")
+      .option("nullValue", "null")
+      .option("treatEmptyValuesAsNulls", "true")
+      .load("file:///tmp/not_live.csv")
+    notlive.registerTempTable("notlive")
 
-    val brokens = s7export.select("*").where(!s7export("<ID>").contains("_P") && !s7export("<ID>").contains("_I"))
-    brokens.show()
-    println(brokens.count)
+    val matches = s7export.join(notlive, notlive("<Name>").equalTo(s7export("<ID>")))
+    matches.show()
+    println(matches.count())
 
 
     /*
-    val selectedData = df.select("year", "model")
-    selectedData
+   mac
       .coalesce(1)   // merge all partitions as one in case result is distributely stored on all nodes
       .write
       .format("com.databricks.spark.csv")
       .option("header", "true")
-      .save("/tmp/cars_new.csv")
+      .save("file:///tmp/new.csv")
       */
   }
 }
