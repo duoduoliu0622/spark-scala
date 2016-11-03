@@ -2,6 +2,7 @@
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SQLContext
+import org.apache.spark.storage.StorageLevel
 
 /**
  * [Note:]
@@ -10,42 +11,47 @@ import org.apache.spark.sql.SQLContext
  */
 object SimpleApp {
   def main(args: Array[String]) {
-    val conf = new SparkConf().setAppName("Simple Application")
+    if (args.length < 2) {
+      System.err.println(s"""
+                            |Usage: SimpleApp not_live.csv  export-fix.csv
+        """.stripMargin)
+      System.exit(1)
+    }
+
+    val Array(notLiveCsv, exportCsv) = args
+    val folder = "file:///dataDisk/s6exports/"
+
+    val conf = new SparkConf()
+        .setAppName("Simple Application")
+        .set("spark.sql.crossJoin.enabled", "true")
+        .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    //    spark.conf.set("spark.sql.crossJoin.enabled", true)
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
+    import sqlContext.implicits._
 
-    val s7export = sqlContext.read
-      .format("com.databricks.spark.csv")
-      .option("header", "true") // Use first line of all files as header
-      .option("inferSchema", "false") // Automatically infer data types
-      .option("delimiter", ";")
-      .option("nullValue", "null")
-      .option("treatEmptyValuesAsNulls", "true")
-      .load("file:///tmp/s7export-fix.csv")
-    s7export.registerTempTable("s7")
+    val s6 = sc.textFile(folder + exportCsv, 8)
+    val s6DF = s6.toDF("total")
+    s6DF.registerTempTable("s6DF")
 
-    val notlive = sqlContext.read
-      .format("com.databricks.spark.csv")
-      .option("header", "true") // Use first line of all files as header
-      .option("inferSchema", "false") // Automatically infer data types
-      .option("delimiter", "\t")
-      .option("nullValue", "null")
-      .option("treatEmptyValuesAsNulls", "true")
-      .load("file:///tmp/not_live.csv")
-    notlive.registerTempTable("notlive")
+    val notlive = sc.textFile(folder + notLiveCsv, 8)
+    val names = notlive.map(_.split("\t")).map(x => x(1))
+    val namesDF = names.toDF("name")
+    namesDF.registerTempTable("namesDF")
+    println("---------" + namesDF.count())
 
-    val matches = s7export.join(notlive, notlive("<Name>").equalTo(s7export("<ID>")))
-    matches.show()
-    println(matches.count())
+    val namesOK = sqlContext.sql("select name from namesDF where length(name) > 2")
+    namesOK.registerTempTable("namesOK")
+    println("---------" + namesOK.count())
 
+//    val matchDF = s6DF.join(nameDF, s6DF("total").contains(nameDF("name")))
+    val matchDF = sqlContext.sql("select s.* from s6DF s join namesOK n on s.total like concat('%', n.name, '%')")
+    matchDF.show(1000)
 
     /*
-   mac
-      .coalesce(1)   // merge all partitions as one in case result is distributely stored on all nodes
-      .write
-      .format("com.databricks.spark.csv")
-      .option("header", "true")
-      .save("file:///tmp/new.csv")
+    matchDF
+      .coalesce(1)
+      .saveAsTextFile(folder + "matches.csv")
       */
   }
 }
@@ -56,5 +62,7 @@ val df = spark.sqlContext.read.format("com.databricks.spark.csv").option("header
 
 
 /*
+scp -i "/Users/kelinliu/.ssh/imagescraper.pem" target/scala-2.11/csv-to-df_2.11-1.0.jar ubuntu@*******:/tmp/
+bin/spark-submit --master local[24] --class SimpleApp /tmp/csv-to-df_2.11-1.0.jar
 /home/ubuntu/spark/bin/spark-shell --master spark://bigdata-master:7077 --packages  com.databricks:spark-csv_2.10:1.5.0, xxx:xxx:xxx
  */

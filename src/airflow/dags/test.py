@@ -5,7 +5,9 @@ http://airflow.readthedocs.org/en/latest/tutorial.html
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
+import os
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 default_args = {
     'owner': 'airflow',
@@ -33,7 +35,7 @@ t1 = BashOperator(
 
 t2 = BashOperator(
     task_id='sleep',
-    bash_command='sleep 5',
+    bash_command='php ' + dir_path + '/first.php',
     retries=3,
     dag=dag)
 
