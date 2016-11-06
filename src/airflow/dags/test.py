@@ -34,9 +34,10 @@ t1 = BashOperator(
     dag=dag)
 
 t2 = BashOperator(
-    task_id='sleep',
-    bash_command='php ' + dir_path + '/first.php',
-    retries=3,
+    task_id='run_test_dot_sh',
+    bash_command='test.sh',
+    params={'MY_NAME':'a_new_file_from_test_dot_sh'},
+    retries=1,
     dag=dag)
 
 templated_command = """
@@ -51,6 +52,12 @@ t3 = BashOperator(
     task_id='templated',
     bash_command=templated_command,
     params={'my_param': 'Parameter I passed in'},
+    dag=dag)
+
+t4 = BashOperator(
+    task_id='php_echo',
+    bash_command='php /usr/local/airflow/echo.php',
+    retries=1,
     dag=dag)
 
 t2.set_upstream(t1)
