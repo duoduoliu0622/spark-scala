@@ -56,7 +56,7 @@ t3 = BashOperator(
 
 t4 = BashOperator(
     task_id='php_echo',
-    bash_command='php /usr/local/airflow/echo.php',
+    bash_command='php /usr/local/airflow/dags/echo.php',
     retries=1,
     dag=dag)
 
