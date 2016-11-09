@@ -12,7 +12,7 @@ $newLines = [];
 $lines = file($oldFile);
 
 foreach($lines as $line) {
-    $fields = explode('";"', $line);
+    $fields = explode(';', $line);
     echo count($fields) . PHP_EOL;
 
     foreach ($fields as $index => $field) {
