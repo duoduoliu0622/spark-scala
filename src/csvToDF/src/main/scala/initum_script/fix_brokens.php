@@ -26,7 +26,7 @@ while (!feof($handle)) {
     }
         $lastNewLine = array_pop($newLines);
         $lastNewLine = trim($lastNewLine, PHP_EOL) . trim($line, PHP_EOL);
-        $newLines[] = $lastNewLine;
+        $newLines[] = $lastNewLine . PHP_EOL;
 }
 fclose($handle);
 
