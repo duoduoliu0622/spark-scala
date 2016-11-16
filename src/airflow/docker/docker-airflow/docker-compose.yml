@@ -27,11 +27,23 @@ services:
         restart: always
         depends_on:
             - webserver
+            - mysql
         volumes:
             # - ./requirements.txt:/requirements.txt:ro
             - ../../dags:/usr/local/airflow/dags
+            - /data:/data
         environment:
             - LOAD_EX=n
             # - FERNET_KEY=9IoTgQ_EJ0hCsamBU3Mctc7F9OkODnndOKCwkwXCAA
             - EXECUTOR=Local
         command: scheduler -n 5
+
+    mysql:
+        image: mysql:5.7
+        environment:
+          - MYSQL_ROOT_PASSWORD=123456
+          - MYSQL_DATABASE=main
+        ports:
+          - "3306:3306"
+        volumes:
+          - ./_mysql:/var/lib/mysql
