@@ -43,7 +43,7 @@ RUN set -ex \
         curl \
         netcat \
         locales \
-        php5 \
+        php5 php5-mysql php5-pdo\
         vim \
         sudo \
     && apt-get install -yqq -t jessie-backports python-requests libpq-dev \

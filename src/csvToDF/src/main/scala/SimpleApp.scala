@@ -1,8 +1,8 @@
 /* SimpleApp.scala */
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.{Row,SQLContext}
-import org.apache.spark.storage.StorageLevel
+import org.apache.spark.sql.{Row, SQLContext}
+import org.myutils.{Credentials, DbSaver}
 
 /**
  * [Note:]
@@ -14,69 +14,71 @@ object SimpleApp {
 
 
   def main(args: Array[String]) {
-    if (args.length < 2) {
+    if (args.length < 1) {
       System.err.println(s"""
-                            |Usage: SimpleApp input.csv result_folder
+                            |Usage: SimpleApp input.xml
         """.stripMargin)
       System.exit(1)
     }
 
-    val Array(inputCsv, resultFolder) = args
+    val Array(inputXml) = args
     val folder = "file:///dataDisk/s6exports/"
 
-    val conf = new SparkConf()
-        .setAppName("Simple Application")
-        .set("spark.sql.crossJoin.enabled", "true")
-        .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    //    spark.conf.set("spark.sql.crossJoin.enabled", true)
+    val conf = new SparkConf().setAppName("Simple Application")
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
-    import sqlContext.implicits._
 
-    val s7 = sc.textFile(folder + inputCsv, 8)
-    val s7Index = s7.map{
-        line =>
-          val _line = line + ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;_lkl"
-          val fields = _line.split(";")
-          new LineObj(fields(0), fields(1), fields(3), fields(4), fields(49), fields(50), fields(51), fields(174), fields(175), fields(181))
+    val user = "root"
+    val pwd = "P)$CC`SEJB{4n8Yk"
+    val url = "jdbc:mysql://127.0.0.1:3306/kelin"
+    val driver = "com.mysql.jdbc.Driver"
+
+    /*
+    val s6 = sc.textFile(folder + inputXml, 16)
+    val s6updated = s6.map{
+      line =>
+        if (line.contains("UserTypeID=\"Item\"")) line.replaceFirst("<Product", "<Product_Item")
+        else if (line.contains("UserTypeID=\"SKU\"")) line.replaceFirst("<Product", "<Product_SKU")
+        else if (line.contains("UserTypeID=\"ProductGroup\"")) line.replaceFirst("<Product", "<Product_ProductGroup")
+        else line
     }
-    val s7DF = s7Index.toDF()
 
-    /*
-    val notlive = sc.textFile(folder + notLiveCsv, 8)
-    val names = notlive.map(_.split("\t")).map(x => x(1))
-    val namesDF = names.toDF("name")
-    namesDF.registerTempTable("namesDF")
-    println("---------" + namesDF.count())
+    val newXml = "_s6updated.xml/part-00000"
+    s6updated.repartition(1).saveAsTextFile(folder + newXml)
+*/
 
-    val namesOK = sqlContext.sql("select name from namesDF where length(name) > 2")
-    namesOK.registerTempTable("namesOK")
-    println("---------" + namesOK.count())
+    val newXml = "_s6updated.xml/part-00000"
+    val df = sqlContext.read
+      .format("com.databricks.spark.xml")
+      .option("rowTag", "Product_ProductGroup")
+      .load(folder + newXml)
 
-//    val matchDF = s6DF.join(nameDF, s6DF("total").contains(nameDF("name")))
-    val matchDF = sqlContext.sql("select s.total from s6DF s join namesOK n on n.name = s.id")
-    matchDF.show(10)
-    println(matchDF.count())
-    */
+    val dbSaver = new DbSaver(url, user, pwd, driver)
+    dbSaver.createAndSave(df, "s6xml")
 
-    s7DF
-        .coalesce(1)
-      .write
-      .format("com.databricks.spark.csv")
-      .option("header", "false")
-      .save(folder + resultFolder)
 
-    /*
-    matchDF
-      .coalesce(1)
-      .saveAsTextFile(folder + "matches.csv")
-      */
+
+
+
+
+/*
+s7DF
+    .coalesce(1)
+  .write
+  .format("com.databricks.spark.csv")
+  .option("header", "false")
+  .save(folder + resultFolder)
+
+matchDF
+  .coalesce(1)
+  .saveAsTextFile(folder + "matches.csv")
+  */
   }
 }
 
 /*
 val df = spark.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "false").option("delimiter", "\t").option("nullValue", "null").option("treatEmptyValuesAsNulls", "true").load("file:///tmp/not_live.csv")
- */
+*/
 
 
 /*
@@ -85,4 +87,6 @@ bin/spark-submit --master local[8] --driver-memory 4g --executor-memory 2g --cla
 601-82925-000 in not-live,  not in match, in s6export.csv,
 
 /home/ubuntu/spark/bin/spark-shell --master spark://bigdata-master:7077 --packages  com.databricks:spark-csv_2.10:1.5.0, xxx:xxx:xxx
- */
+
+../spark/bin/spark-submit --master local[8] --driver-memory 12g --packages com.databricks:spark-xml_2.10:0.4.1,mysql:mysql-connector-java:5.1.40 --class SimpleApp csv-to-df_2.11-1.0.jar s6export.xml
+*/
