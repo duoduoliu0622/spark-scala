@@ -34,3 +34,5 @@ try {
 } catch (MissingPluginException $e) {
     // Do not halt if the plugin is missing
 }
+
+require_once dirname(__DIR__) . DS . "src/Api.php";

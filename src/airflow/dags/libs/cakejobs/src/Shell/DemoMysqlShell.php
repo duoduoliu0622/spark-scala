@@ -14,8 +14,10 @@
  */
 namespace App\Shell;
 
+use Api;
 use Cake\Console\Shell;
 use Cake\Datasource\ConnectionManager;
+use Curl\Curl;
 
 /**
  * Simple console wrapper around Psy\Shell.
@@ -30,10 +32,18 @@ class DemoMysqlShell extends Shell
      */
     public function main()
     {
+        /*
         $conn = ConnectionManager::get('default');
         $row = $conn
             ->execute("select count(1) from tweets")
             ->fetch("assoc");
         var_dump($row);
+*/
+        var_dump(Api::get("mysql_username"));
+
+        /** @var Curl $curl */
+        $curl = Api::get('curl');
+        $curl->get("www.google.com");
+        var_dump($curl->httpStatusCode);
     }
 }
