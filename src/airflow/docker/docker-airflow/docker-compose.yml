@@ -31,7 +31,7 @@ services:
         volumes:
             # - ./requirements.txt:/requirements.txt:ro
             - ../../dags:/usr/local/airflow/dags
-            - /data:/data
+            - ./_data:/data
         environment:
             - LOAD_EX=n
             # - FERNET_KEY=9IoTgQ_EJ0hCsamBU3Mctc7F9OkODnndOKCwkwXCAA
