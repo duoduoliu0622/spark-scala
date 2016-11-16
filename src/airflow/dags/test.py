@@ -55,8 +55,8 @@ t3 = BashOperator(
     dag=dag)
 
 t4 = BashOperator(
-    task_id='php_echo',
-    bash_command='php /usr/local/airflow/dags/echo.php',
+    task_id='cakejobs',
+    bash_command='cd /usr/local/airflow/dags/libs/cakejobs && bin/cake DemoMysql >>tmp/tweet.count 2>&1',
     retries=1,
     dag=dag)
 

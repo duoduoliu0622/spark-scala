@@ -43,14 +43,14 @@ RUN set -ex \
         curl \
         netcat \
         locales \
-        php5 php5-mysql php5-pdo\
+        php5 php5-mysql php5-intl\
         vim \
         sudo \
     && apt-get install -yqq -t jessie-backports python-requests libpq-dev \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
-    && useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow \
+    && useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow && echo "airflow:airflow" | chpasswd && adduser airflow sudo \
     && pip install Cython \
     && pip install pytz==2015.7 \
     && pip install cryptography \
