@@ -12,6 +12,9 @@ public class App
         HelloWorld obj = (HelloWorld) context.getBean("helloWorld");
         obj.getMessage();
 
+        TextEditor textEditor = (TextEditor) context.getBean("textEditor");
+        textEditor.spellCheck();
+
         context = null;
     }
 }

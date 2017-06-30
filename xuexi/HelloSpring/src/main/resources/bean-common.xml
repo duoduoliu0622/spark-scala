@@ -9,4 +9,10 @@
         <property name = "message" value = "Hello World!"/>
     </bean>
 
+    <bean id = "textEditor" class = "com.lkl.poc.TextEditor">
+        <property name = "spellChecker">
+            <bean id = "spellChecker" class = "com.lkl.poc.SpellChecker"/>
+        </property>
+    </bean>
+
 </beans>
