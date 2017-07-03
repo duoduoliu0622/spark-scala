@@ -53,6 +53,27 @@
             <version>${log4j.version}</version>
         </dependency>
 
+        <!-- aws platform-->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>1.11.106</version>
+        </dependency>
+
+        <!--
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk</artifactId>
+            <version>1.11.106</version>
+        </dependency>
+        -->
+
     </dependencies>
 
     <build>

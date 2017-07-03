@@ -5,8 +5,9 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-    <bean id = "helloWorld" class = "com.lkl.poc.HelloWorld">
-        <property name = "message" value = "Hello World!"/>
+    <bean id = "s3Service" class = "com.lkl.poc.services.S3Service">
+        <property name = "s3AccessKey" value = "xxxxxxxxxxxxxxxxxxxxxx"/>
+        <property name = "s3SecretKey" value = "xxxxxxxxxxxxxxxxxxxxxxxxxx"/>
     </bean>
 
     <bean id = "textEditor" class = "com.lkl.poc.TextEditor">
