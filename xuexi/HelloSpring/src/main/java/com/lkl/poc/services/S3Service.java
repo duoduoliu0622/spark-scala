@@ -29,7 +29,7 @@ public class S3Service {
         this.s3SecretKey = s3SecretKey;
     }
 
-    public void upload(String s3bucket, String s3TargetFilePath, String text) {
+    public void uploadText(String s3bucket, String s3TargetFilePath, String text) {
         AmazonS3 s3client = getS3Client();
 
         try {
@@ -37,6 +37,18 @@ public class S3Service {
             ObjectMetadata omd = new ObjectMetadata();
             omd.setContentLength(text.length());
 
+            s3client.putObject(new PutObjectRequest(s3bucket, s3TargetFilePath, stream, omd));
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    public void uploadStream(String s3bucket, String s3TargetFilePath, InputStream stream) {
+        AmazonS3 s3client = getS3Client();
+
+        try {
+            ObjectMetadata omd = new ObjectMetadata();
             s3client.putObject(new PutObjectRequest(s3bucket, s3TargetFilePath, stream, omd));
         } catch (Exception e) {
             e.printStackTrace();

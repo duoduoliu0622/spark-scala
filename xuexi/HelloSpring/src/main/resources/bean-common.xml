@@ -10,6 +10,11 @@
         <property name = "s3SecretKey" value = "xxxxxxxxxxxxxxxxxxxxxxxxxx"/>
     </bean>
 
+    <bean id = "pollyService" class = "com.lkl.poc.services.PollyService">
+        <property name = "s3AccessKey" value = "xxxxxxxxxxxxxxxxxxxxxx"/>
+        <property name = "s3SecretKey" value = "xxxxxxxxxxxxxxxxxxxxxxxxxx"/>
+    </bean>
+
     <bean id = "textEditor" class = "com.lkl.poc.TextEditor">
         <property name = "spellChecker">
             <bean id = "spellChecker" class = "com.lkl.poc.SpellChecker"/>
