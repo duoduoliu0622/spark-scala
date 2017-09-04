@@ -1,0 +1,9 @@
+1. compile.
+mvn compile
+
+2. generate jar.
+mvn package
+
+3. execute.
+1) scala -classpath target/HelloScalaMaven-1.0.0-SNAPSHOT.jar com.lkl.xuexi.HelloScala
+2) scala(|java) -classpath target/HelloScalaMaven-1.0.0-SNAPSHOT.jar com.lkl.xuexi.HelloJava
